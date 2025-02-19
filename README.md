@@ -13,11 +13,6 @@ TrackFit is a sleek and modern fitness tracking app designed to help users monit
 
 ---
 
-## 📱 Screenshots  
-| Splash Screen | Dashboard | Workout Tracker |
-|--------------|-----------|----------------|
-| ![Splash](assets/screenshots/splash.png) | ![Dashboard](assets/screenshots/dashboard.png) | ![Workout](assets/screenshots/workout.png) |
-
 ---
 
 ## 🛠 Installation  
