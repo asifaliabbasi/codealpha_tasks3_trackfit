@@ -7,8 +7,6 @@ TrackFit is a sleek and modern fitness tracking app designed to help users monit
 - 📈 **Workout Tracking** – Log exercises, sets, reps, and calories burned.  
 - ⏳ **Progress Visualization** – See your fitness journey with interactive charts.  
 - 🏃‍♂️ **3D Exercise Illustrations** – Learn proper form with high-quality visuals.  
-- ⌚ **Wearable Sync** – Connect with smartwatches for real-time tracking.  
-- 🌙 **Dark Mode & Custom Themes** – Personalize your UI experience.  
 - 🔔 **Goal Reminders** – Stay on track with motivational notifications.  
 
 ---
