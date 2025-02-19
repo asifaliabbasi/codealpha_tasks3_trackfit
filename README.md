@@ -1,16 +1,28 @@
-# fitness_tracker_app
+# TrackFit 🏋️‍♂️📊  
+**Track your fitness journey with ease!**  
 
-A new Flutter project.
+TrackFit is a sleek and modern fitness tracking app designed to help users monitor their workouts, track progress, and stay motivated. Whether you're lifting weights, running, or just staying active, TrackFit makes fitness tracking effortless.
 
-## Getting Started
+## 🚀 Features  
+- 📈 **Workout Tracking** – Log exercises, sets, reps, and calories burned.  
+- ⏳ **Progress Visualization** – See your fitness journey with interactive charts.  
+- 🏃‍♂️ **3D Exercise Illustrations** – Learn proper form with high-quality visuals.  
+- ⌚ **Wearable Sync** – Connect with smartwatches for real-time tracking.  
+- 🌙 **Dark Mode & Custom Themes** – Personalize your UI experience.  
+- 🔔 **Goal Reminders** – Stay on track with motivational notifications.  
 
-This project is a starting point for a Flutter application.
+---
 
-A few resources to get you started if this is your first Flutter project:
+## 📱 Screenshots  
+| Splash Screen | Dashboard | Workout Tracker |
+|--------------|-----------|----------------|
+| ![Splash](assets/screenshots/splash.png) | ![Dashboard](assets/screenshots/dashboard.png) | ![Workout](assets/screenshots/workout.png) |
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🛠 Installation  
+
+### **1️⃣ Clone the Repository**  
+```bash
+git clone https://github.com/yourusername/trackfit.git
+cd trackfit
