@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fitness_tracker_app/Screens/exercises_History.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -161,51 +162,53 @@ class _DashboardState extends State<Dashboard> {
       builder: (context) {
         return AlertDialog(
           title: Text("Plank"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Get ready to do Plank!"),
-              SizedBox(height: 10),
-              Image.asset(
-                'images/exercises/plank.png',
-                height: 150,
-                width: 150,
-              ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 50,
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      controller: timeMDuration,
-                      decoration: InputDecoration(
-                          labelText: 'M',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(2),
-                              borderSide: BorderSide(width: 5))),
+          content: Card(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Get ready to do Plank!"),
+                SizedBox(height: 10),
+                Image.asset(
+                  'images/exercises/plank.png',
+                  height: 150,
+                  width: 150,
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 50,
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        controller: timeMDuration,
+                        decoration: InputDecoration(
+                            labelText: 'M',
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(2),
+                                borderSide: BorderSide(width: 5))),
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 20),
-                  Text(':'),
-                  SizedBox(width: 20),
-                  Container(
-                    width: 50,
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                          labelText: 'S',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(2),
-                              borderSide: BorderSide(width: 5))),
-                      controller: timeSDuration,
+                    SizedBox(width: 20),
+                    Text(':'),
+                    SizedBox(width: 20),
+                    Container(
+                      width: 50,
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                            labelText: 'S',
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(2),
+                                borderSide: BorderSide(width: 5))),
+                        controller: timeSDuration,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -214,6 +217,7 @@ class _DashboardState extends State<Dashboard> {
             ),
             TextButton(
               onPressed: () {
+                if(timeMDuration.text.isNotEmpty || timeSDuration.text.isNotEmpty){
                 int seconds = int.tryParse(timeSDuration.text) ?? 0;
                 int minutes = int.tryParse(timeMDuration.text) ?? 0;
                 int duration = (minutes * 60) + seconds;
@@ -228,7 +232,10 @@ class _DashboardState extends State<Dashboard> {
                 _addFitnessTrack('$duration', '', 0, 0);
                 setState(() {
 
-                });
+                });}
+                else{
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please Enter Time')));
+                }
               },
               child: Text("Start"),
             ),
@@ -245,36 +252,39 @@ class _DashboardState extends State<Dashboard> {
       builder: (context) {
         return AlertDialog(
           title: Text("PushUps"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Get ready to do PushUps!"),
-              SizedBox(height: 10),
-              Image.asset(
-                'images/exercises/pushups.png',
-                width: 150,
-                height: 150,
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              TextField(
-                keyboardType: TextInputType.number,
-                controller: _pushUps,
-                decoration: InputDecoration(
-                    hintText: 'PushUps you want to do!',
-                    labelText: 'PushUps',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(2),
-                        borderSide: BorderSide(width: 5))),
-              ),
-            ],
+          content: Card(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Get ready to do PushUps!"),
+                SizedBox(height: 10),
+                Image.asset(
+                  'images/exercises/pushups.png',
+                  width: 150,
+                  height: 150,
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                TextField(
+                  keyboardType: TextInputType.number,
+                  controller: _pushUps,
+                  decoration: InputDecoration(
+                      hintText: 'PushUps you want to do!',
+                      labelText: 'PushUps',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(2),
+                          borderSide: BorderSide(width: 5))),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context), child: Text('Cancel')),
             TextButton(
               onPressed: () {
+                if(_pushUps.text.isNotEmpty){
                 int PUSHUPS = int.parse(_pushUps.text) ?? 0;
                 Navigator.push(
                     context,
@@ -285,36 +295,12 @@ class _DashboardState extends State<Dashboard> {
                   print(_fitnessScore);
                   _loadFitnessTrack();
                   _addFitnessTrack('', '', PUSHUPS, 0);
-                });
-              },
-              child: Text("Done"),
-            ),
-          ],
-        );
-      },
-    );
-  }
+                });}
+                else{
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please Enter PushUps')));
 
-  void startJumpJacks() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Jump Jacks"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Get ready to do Jump Jacks!"),
-              SizedBox(height: 10),
-              Text(
-                '🏃🏼',
-                style: TextStyle(fontSize: 50),
-              )
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
+                }
+              },
               child: Text("Done"),
             ),
           ],
@@ -329,47 +315,49 @@ class _DashboardState extends State<Dashboard> {
       builder: (context) {
         return AlertDialog(
           title: Text("Lungs Test "),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Get ready to Hold Your Breath!"),
-              SizedBox(height: 10),
-              Icon(FontAwesomeIcons.lungs),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 50,
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      controller: timeMDuration,
-                      decoration: InputDecoration(
-                          labelText: 'M',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(2),
-                              borderSide: BorderSide(width: 5))),
+          content: Card(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Get ready to Hold Your Breath!"),
+                SizedBox(height: 10),
+                Icon(FontAwesomeIcons.lungs),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 50,
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        controller: timeMDuration,
+                        decoration: InputDecoration(
+                            labelText: 'M',
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(2),
+                                borderSide: BorderSide(width: 5))),
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 20),
-                  Text(':'),
-                  SizedBox(width: 20),
-                  Container(
-                    width: 50,
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                          labelText: 'S',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(2),
-                              borderSide: BorderSide(width: 5))),
-                      controller: timeSDuration,
+                    SizedBox(width: 20),
+                    Text(':'),
+                    SizedBox(width: 20),
+                    Container(
+                      width: 50,
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                            labelText: 'S',
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(2),
+                                borderSide: BorderSide(width: 5))),
+                        controller: timeSDuration,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -378,6 +366,7 @@ class _DashboardState extends State<Dashboard> {
             ),
             TextButton(
               onPressed: () {
+                if(timeSDuration.text.isNotEmpty || timeMDuration.text.isNotEmpty){
                 int seconds = int.tryParse(timeSDuration.text) ?? 0;
                 int minutes = int.tryParse(timeMDuration.text) ?? 0;
                 int duration = (minutes * 60) + seconds;
@@ -392,7 +381,10 @@ class _DashboardState extends State<Dashboard> {
                 _addFitnessTrack('','$duration', 0, 0);
                 setState(() {
 
-                });
+                });}
+                else{
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please Enter Time')));
+                }
               },
               child: Text("Start"),
             ),
@@ -505,10 +497,7 @@ class _DashboardState extends State<Dashboard> {
                   children: [
                     TextButton(
                         onPressed: (){
-                          setState(() {
-                            print(_fitnessScore.last.toString());
-                         _calculateTotals();
-                                });
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => ExercisesHistory(),));
             }, child: Text('Show History')),
                     SizedBox(width: 10,),
                     TextButton(onPressed: ()async{
@@ -1006,6 +995,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _buildInfoCard(FontAwesomeIcons.user, "Age", "${userProfile['Age']} years"),
         _buildInfoCard(FontAwesomeIcons.rulerVertical, "Height", "${userProfile['Height']} cm"),
         _buildInfoCard(FontAwesomeIcons.weight, "Weight", "${userProfile['Weight']} kg"),
+
       ],
     );
   }

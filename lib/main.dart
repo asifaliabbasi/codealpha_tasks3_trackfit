@@ -1,4 +1,5 @@
 import 'package:fitness_tracker_app/Screens/home_Screen.dart';
+import 'package:fitness_tracker_app/Screens/splash_Screen.dart';
 import 'package:flutter/material.dart';
 
 import 'Screens/NewUser/Data_Check.dart';
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.blueAccent,
         scaffoldBackgroundColor: Colors.black,
       ),
-      home: DataCheck(),
+      home: SplashScreen(),
     );
   }
 }

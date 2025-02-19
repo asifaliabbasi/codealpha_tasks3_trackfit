@@ -152,15 +152,6 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> deleteTrack(int id) async {
-    final db = await database;
-    try {
-      return await db.delete('workouts', where: 'id = ?', whereArgs: [id]);
-    } catch (e) {
-      print('Error deleting track: $e');
-      return -1;
-    }
-  }
 
   Future<int> saveWorkouts(int pushups, String plank, String lungs, int steps) async {
     final db = await database;
