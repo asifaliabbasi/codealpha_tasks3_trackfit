@@ -6,7 +6,16 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:flutter/services.dart';
+import 'package:confetti/confetti.dart';
+import 'package:intl/intl.dart';
 import '../Database/DataBase_Helper.dart';
+import '../widgets/animated_counter.dart';
+import '../widgets/glassmorphic_card.dart';
+import '../widgets/weekly_chart.dart';
+import '../widgets/streak_widget.dart';
+import 'achievements_screen.dart';
+import 'bmi_calculator.dart';
+import 'water_tracker.dart';
 import 'Exercises/plank.dart';
 import 'Exercises/lungs_Breath.dart';
 import 'Exercises/pushUps.dart';
@@ -20,11 +29,10 @@ class Fitness_Tracker extends StatefulWidget {
 class _Fitness_TrackerState extends State<Fitness_Tracker> {
   int currentIndex = 0; // Track the selected tab index
 
-
   List<Map<String, dynamic>> _fitnessScore = [];
   Future<void> _loadFitnessTrack() async {
     final List<Map<String, dynamic>> data =
-    await DatabaseHelper.instance.getFitness();
+        await DatabaseHelper.instance.getFitness();
     if (mounted) {
       setState(() {
         _fitnessScore = data;
@@ -78,12 +86,14 @@ class Dashboard extends StatefulWidget {
   State<Dashboard> createState() => _DashboardState();
 }
 
-class _DashboardState extends State<Dashboard> {
+class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   late Stream<StepCount> _stepCountStream;
   int totalPlank = 0;
   int totalLungs = 0;
   int totalPushups = 0;
   int totalSteps = 0;
+  int streakDays = 0;
+  late ConfettiController _confettiController;
 
   void _calculateTotals() {
     totalPlank = 0;
@@ -92,18 +102,15 @@ class _DashboardState extends State<Dashboard> {
     totalSteps = 0;
 
     for (var fitnessData in _fitnessScore) {
-      totalPlank += int.tryParse(fitnessData['plank']) ?? 0 ;
-      totalLungs += int.tryParse(fitnessData['lungs']) ?? 0 ;
+      totalPlank += int.tryParse(fitnessData['plank']) ?? 0;
+      totalLungs += int.tryParse(fitnessData['lungs']) ?? 0;
       totalPushups += (fitnessData['pushups'] ?? 0) as int;
       totalSteps += (fitnessData['steps'] ?? 0) as int;
       print('Steps are: $totalSteps');
-      setState(() {
-
-      });
+      setState(() {});
     }
 
-    setState(() {
-    });
+    setState(() {});
   }
 
   String formatTime(int seconds) {
@@ -111,8 +118,6 @@ class _DashboardState extends State<Dashboard> {
     int remainingSeconds = seconds % 60;
     return '$minutes ${minutes == 1 ? '' : 'm'} : $remainingSeconds ${remainingSeconds == 1 ? '' : 's'}';
   }
-
-
 
   //Database functions
   List<Map<String, dynamic>> _fitnessScore = [];
@@ -123,13 +128,16 @@ class _DashboardState extends State<Dashboard> {
       setState(() {
         _fitnessScore = data;
         _calculateTotals();
+        _calculateStreak();
       });
     }
   }
 
-  Future<void> _addFitnessTrack(String Tplank, String Tlungs, int Tpushups, int Tsteps) async {
+  Future<void> _addFitnessTrack(
+      String Tplank, String Tlungs, int Tpushups, int Tsteps) async {
     try {
-      await DatabaseHelper.instance.saveWorkouts(Tpushups, Tplank, Tlungs, Tsteps);
+      await DatabaseHelper.instance
+          .saveWorkouts(Tpushups, Tplank, Tlungs, Tsteps);
       await _loadFitnessTrack(); // Ensure Track reload after adding a new one
     } catch (e) {
       print('Error adding fitness track: $e');
@@ -142,15 +150,13 @@ class _DashboardState extends State<Dashboard> {
   List<Map<String, dynamic>> _fitnessGoals = [];
   Future<void> _loadGoals() async {
     final List<Map<String, dynamic>> data =
-    await DatabaseHelper.instance.getGoals();
+        await DatabaseHelper.instance.getGoals();
     if (mounted) {
       setState(() {
         _fitnessGoals = data;
       });
+    }
   }
-  }
-
-
 
   TextEditingController timeMDuration = TextEditingController();
   TextEditingController timeSDuration = TextEditingController();
@@ -217,24 +223,24 @@ class _DashboardState extends State<Dashboard> {
             ),
             TextButton(
               onPressed: () {
-                if(timeMDuration.text.isNotEmpty || timeSDuration.text.isNotEmpty){
-                int seconds = int.tryParse(timeSDuration.text) ?? 0;
-                int minutes = int.tryParse(timeMDuration.text) ?? 0;
-                int duration = (minutes * 60) + seconds;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Plank(
-                      duration: duration,
+                if (timeMDuration.text.isNotEmpty ||
+                    timeSDuration.text.isNotEmpty) {
+                  int seconds = int.tryParse(timeSDuration.text) ?? 0;
+                  int minutes = int.tryParse(timeMDuration.text) ?? 0;
+                  int duration = (minutes * 60) + seconds;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Plank(
+                        duration: duration,
+                      ),
                     ),
-                  ),
-                );
-                _addFitnessTrack('$duration', '', 0, 0);
-                setState(() {
-
-                });}
-                else{
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please Enter Time')));
+                  );
+                  _addFitnessTrack('$duration', '', 0, 0);
+                  setState(() {});
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Please Enter Time')));
                 }
               },
               child: Text("Start"),
@@ -244,7 +250,6 @@ class _DashboardState extends State<Dashboard> {
       },
     );
   }
-
 
   void startPushUps() {
     showDialog(
@@ -284,21 +289,23 @@ class _DashboardState extends State<Dashboard> {
                 onPressed: () => Navigator.pop(context), child: Text('Cancel')),
             TextButton(
               onPressed: () {
-                if(_pushUps.text.isNotEmpty){
-                int PUSHUPS = int.parse(_pushUps.text) ?? 0;
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PushUps(pushups: PUSHUPS,),
-                    ));
-                setState(() {
-                  print(_fitnessScore);
-                  _loadFitnessTrack();
-                  _addFitnessTrack('', '', PUSHUPS, 0);
-                });}
-                else{
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please Enter PushUps')));
-
+                if (_pushUps.text.isNotEmpty) {
+                  int PUSHUPS = int.parse(_pushUps.text) ?? 0;
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PushUps(
+                          pushups: PUSHUPS,
+                        ),
+                      ));
+                  setState(() {
+                    print(_fitnessScore);
+                    _loadFitnessTrack();
+                    _addFitnessTrack('', '', PUSHUPS, 0);
+                  });
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Please Enter PushUps')));
                 }
               },
               child: Text("Done"),
@@ -366,24 +373,24 @@ class _DashboardState extends State<Dashboard> {
             ),
             TextButton(
               onPressed: () {
-                if(timeSDuration.text.isNotEmpty || timeMDuration.text.isNotEmpty){
-                int seconds = int.tryParse(timeSDuration.text) ?? 0;
-                int minutes = int.tryParse(timeMDuration.text) ?? 0;
-                int duration = (minutes * 60) + seconds;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Breath(
-                      duration: duration,
+                if (timeSDuration.text.isNotEmpty ||
+                    timeMDuration.text.isNotEmpty) {
+                  int seconds = int.tryParse(timeSDuration.text) ?? 0;
+                  int minutes = int.tryParse(timeMDuration.text) ?? 0;
+                  int duration = (minutes * 60) + seconds;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Breath(
+                        duration: duration,
+                      ),
                     ),
-                  ),
-                );
-                _addFitnessTrack('','$duration', 0, 0);
-                setState(() {
-
-                });}
-                else{
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please Enter Time')));
+                  );
+                  _addFitnessTrack('', '$duration', 0, 0);
+                  setState(() {});
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Please Enter Time')));
                 }
               },
               child: Text("Start"),
@@ -397,8 +404,51 @@ class _DashboardState extends State<Dashboard> {
   @override
   void initState() {
     super.initState();
+    _confettiController = ConfettiController(duration: Duration(seconds: 3));
     _loadFitnessTrack();
     _loadGoals();
+    _calculateStreak();
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  void _calculateStreak() {
+    if (_fitnessScore.isEmpty) {
+      setState(() {
+        streakDays = 0;
+      });
+      return;
+    }
+
+    int streak = 0;
+    DateTime? lastDate;
+
+    for (var workout in _fitnessScore) {
+      DateTime workoutDate = DateTime.parse(workout['date']);
+      DateTime workoutDay =
+          DateTime(workoutDate.year, workoutDate.month, workoutDate.day);
+
+      if (lastDate == null) {
+        streak = 1;
+        lastDate = workoutDay;
+      } else {
+        Duration difference = lastDate.difference(workoutDay);
+        if (difference.inDays == 1) {
+          streak++;
+          lastDate = workoutDay;
+        } else if (difference.inDays > 1) {
+          break;
+        }
+      }
+    }
+
+    setState(() {
+      streakDays = streak;
+    });
   }
 
   TextEditingController pushUps = TextEditingController();
@@ -407,29 +457,59 @@ class _DashboardState extends State<Dashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[200],
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              SizedBox(
-                height: 20,
+      body: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  SizedBox(height: 20),
+                  Text(
+                    " Dashboard 🏋️",
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 30),
+                  _buildHeader(),
+                  SizedBox(height: 20),
+                  // Streak Widget
+                  StreakWidget(streakDays: streakDays),
+                  SizedBox(height: 20),
+                  // Quick Actions
+                  _buildQuickActions(),
+                  SizedBox(height: 20),
+                  _buildAnalyticsCard(),
+                  SizedBox(height: 20),
+                  // Weekly Chart
+                  if (_fitnessScore.isNotEmpty)
+                    WeeklyChart(fitnessData: _fitnessScore),
+                  SizedBox(height: 20),
+                  _buildPopularExercises(),
+                  SizedBox(height: 20),
+                ],
               ),
-              Text(
-                " Dashboard 🏋️",
-                style: TextStyle(color: Colors.black, fontSize: 20,fontWeight: FontWeight.bold),
-              ),
-              SizedBox(
-                height: 30,
-              ),
-              _buildHeader(),
-              SizedBox(height: 20),
-              _buildAnalyticsCard(),
-              SizedBox(height: 20),
-              _buildPopularExercises(),
-            ],
+            ),
           ),
-        ),
+          // Confetti overlay
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+              colors: [
+                Colors.green,
+                Colors.blue,
+                Colors.pink,
+                Colors.orange,
+                Colors.purple
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -451,6 +531,88 @@ class _DashboardState extends State<Dashboard> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildQuickActions() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildActionButton(
+          'Achievements',
+          FontAwesomeIcons.trophy,
+          Colors.amber,
+          () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AchievementsScreen(
+                  totalPushups: totalPushups,
+                  totalSteps: totalSteps,
+                  streakDays: streakDays,
+                ),
+              ),
+            );
+          },
+        ),
+        _buildActionButton(
+          'BMI',
+          FontAwesomeIcons.weight,
+          Colors.teal,
+          () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => BMICalculator()),
+            );
+          },
+        ),
+        _buildActionButton(
+          'Water',
+          FontAwesomeIcons.glassWater,
+          Colors.blue,
+          () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => WaterTracker()),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton(
+      String label, IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.2),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 28),
+            SizedBox(height: 8),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -487,28 +649,44 @@ class _DashboardState extends State<Dashboard> {
               ),
             ),
             SizedBox(height: 15),
-            _buildStatRow(FontAwesomeIcons.stopwatch, 'Plank Duration', formatTime(totalPlank), Colors.orange),
-            _buildStatRow(FontAwesomeIcons.running, 'Lungs Duration', formatTime(totalLungs), Colors.greenAccent),
-            _buildStatRow(FontAwesomeIcons.dumbbell, 'Push-ups', '$totalPushups reps', Colors.orangeAccent),
-            _buildStatRow(FontAwesomeIcons.walking, 'Total Steps', '$totalSteps', Colors.redAccent),
+            _buildStatRow(FontAwesomeIcons.stopwatch, 'Plank Duration',
+                formatTime(totalPlank), Colors.orange),
+            _buildStatRow(FontAwesomeIcons.running, 'Lungs Duration',
+                formatTime(totalLungs), Colors.greenAccent),
+            _buildStatRow(FontAwesomeIcons.dumbbell, 'Push-ups',
+                '$totalPushups reps', Colors.orangeAccent,
+                isNumeric: true, numericValue: totalPushups),
+            _buildStatRow(FontAwesomeIcons.walking, 'Total Steps',
+                '$totalSteps', Colors.redAccent,
+                isNumeric: true, numericValue: totalSteps),
             Align(
                 alignment: Alignment.topRight,
                 child: Row(
                   children: [
                     TextButton(
-                        onPressed: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => ExercisesHistory(),));
-            }, child: Text('Show History')),
-                    SizedBox(width: 10,),
-                    TextButton(onPressed: ()async{
-                      await DatabaseHelper.instance.clearWorkouts();
-                      setState(() {
-                        _loadFitnessTrack();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Scores cleared successfully!")));
-                        _fitnessScore.clear(); // Clear the local list as well
-                      });
-                    }, child: Text('Reset Progress')),
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ExercisesHistory(),
+                              ));
+                        },
+                        child: Text('Show History')),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    TextButton(
+                        onPressed: () async {
+                          await DatabaseHelper.instance.clearWorkouts();
+                          setState(() {
+                            _loadFitnessTrack();
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text("Scores cleared successfully!")));
+                            _fitnessScore
+                                .clear(); // Clear the local list as well
+                          });
+                        },
+                        child: Text('Reset Progress')),
                   ],
                 )),
           ],
@@ -517,7 +695,8 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  Widget _buildStatRow(IconData icon, String label, String value, Color color) {
+  Widget _buildStatRow(IconData icon, String label, String value, Color color,
+      {bool isNumeric = false, int? numericValue}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -529,14 +708,35 @@ class _DashboardState extends State<Dashboard> {
             style: GoogleFonts.poppins(fontSize: 16, color: Colors.white70),
           ),
           Spacer(),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
+          isNumeric && numericValue != null
+              ? Row(
+                  children: [
+                    AnimatedCounter(
+                      value: numericValue,
+                      textStyle: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      label.contains('Push-ups') ? ' reps' : '',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                )
+              : Text(
+                  value,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
         ],
       ),
     );
@@ -544,17 +744,28 @@ class _DashboardState extends State<Dashboard> {
 
   Widget _buildGoalTracker() {
     Map<String, dynamic> Goals = _fitnessGoals.first;
-    int Steps  = Goals['Steps'] as int;
+    int Steps = Goals['Steps'] as int;
     int pushUPS = Goals['pushUps'] as int;
+
+    // Check if goals are achieved and trigger confetti
+    if ((totalSteps >= Steps || totalPushups >= pushUPS) &&
+        !_confettiController.state.toString().contains('playing')) {
+      Future.delayed(Duration(milliseconds: 500), () {
+        _confettiController.play();
+      });
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           "Fitness Goals Progress",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[200]),
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[200]),
         ),
         SizedBox(height: 20),
-
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -574,10 +785,15 @@ class _DashboardState extends State<Dashboard> {
                         strokeWidth: 6,
                       ),
                     ),
-                    Image.asset('images/exercises/steps.png',scale: 20,),
-                   ],
+                    Image.asset(
+                      'images/exercises/steps.png',
+                      scale: 20,
+                    ),
+                  ],
                 ),
-                SizedBox(height: 10,),
+                SizedBox(
+                  height: 10,
+                ),
                 Text(
                   "${(totalSteps / Steps * 100).clamp(0, 100).toStringAsFixed(1)}%",
                   style: TextStyle(
@@ -615,11 +831,15 @@ class _DashboardState extends State<Dashboard> {
                         strokeWidth: 6,
                       ),
                     ),
-                    Image.asset('images/exercises/pushups.png',scale: 40,),
-
+                    Image.asset(
+                      'images/exercises/pushups.png',
+                      scale: 40,
+                    ),
                   ],
                 ),
-                SizedBox(height: 10,),
+                SizedBox(
+                  height: 10,
+                ),
                 Text(
                   "${(totalPushups / pushUPS * 100).clamp(0, 100).toStringAsFixed(1)}%",
                   style: TextStyle(
@@ -645,7 +865,6 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-
   Widget _buildPopularExercises() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -666,14 +885,15 @@ class _DashboardState extends State<Dashboard> {
                 child: _buildExerciseCard(
                     "PushUps", "images/exercises/home_workout.png")),
             InkWell(
-              onTap: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => PedometerScreen(),));
-                setState(() {
-
-                });
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PedometerScreen(),
+                    ));
+                setState(() {});
               },
-              child: _buildExerciseCard(
-                  "Steps", "images/exercises/steps.png"),
+              child: _buildExerciseCard("Steps", "images/exercises/steps.png"),
             ),
           ],
         ),
@@ -687,7 +907,8 @@ class _DashboardState extends State<Dashboard> {
                     _buildExerciseCard("Plank", "images/exercises/plank.png")),
             InkWell(
                 onTap: startLungs,
-                child: _buildExerciseCard("Lungs", "images/exercises/lungs.png")),
+                child:
+                    _buildExerciseCard("Lungs", "images/exercises/lungs.png")),
           ],
         ),
       ],
@@ -695,24 +916,34 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Widget _buildExerciseCard(String title, String imagePath) {
-    return Container(
-      width: MediaQuery.of(context).size.width * 0.4,
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
-      ),
-      child: Column(
-        children: [
-          Image.asset(imagePath, height: 120),
-          SizedBox(height: 10),
-          Text(title,
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black)),
-        ],
+    return Hero(
+      tag: 'exercise_$title',
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.4,
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 10,
+              spreadRadius: 2,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Image.asset(imagePath, height: 120),
+            SizedBox(height: 10),
+            Text(title,
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black)),
+          ],
+        ),
       ),
     );
   }
@@ -733,7 +964,7 @@ class _Workout_ScreenState extends State<Workout_Screen> {
   List<Map<String, dynamic>> _fitnessGoals = [];
   Future<void> _loadGoals() async {
     final List<Map<String, dynamic>> data =
-    await DatabaseHelper.instance.getGoals();
+        await DatabaseHelper.instance.getGoals();
     if (mounted) {
       setState(() {
         _fitnessGoals = data;
@@ -747,8 +978,6 @@ class _Workout_ScreenState extends State<Workout_Screen> {
     // Ensure Track reload after adding a new one
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -761,12 +990,20 @@ class _Workout_ScreenState extends State<Workout_Screen> {
             SizedBox(
               height: 20,
             ),
-            Text('Goals 🎯',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold,color: Colors.black),),
+            Text(
+              'Goals 🎯',
+              style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black),
+            ),
             SizedBox(height: 20),
             Text(
               "Set Your Fitness Goals",
               style: TextStyle(
-                  fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black),
             ),
             SizedBox(height: 20),
             Expanded(
@@ -779,7 +1016,7 @@ class _Workout_ScreenState extends State<Workout_Screen> {
                     "Push-ups Goal",
                     "images/exercises/pushups.png", // Add a push-up related image
                     pushupController,
-                    ),
+                  ),
                   buildGoalCard(
                     "Steps Goal",
                     "images/exercises/steps.png", // Add a steps-related image
@@ -799,27 +1036,29 @@ class _Workout_ScreenState extends State<Workout_Screen> {
                 // Handle goal submission
                 int pushupGoal = int.tryParse(pushupController.text) ?? 0;
                 int stepsGoal = int.tryParse(stepsController.text) ?? 0;
-                if(pushupController.text.isNotEmpty && stepsController.text.isNotEmpty) {
+                if (pushupController.text.isNotEmpty &&
+                    stepsController.text.isNotEmpty) {
                   _addGoals(pushupGoal, stepsGoal);
                   setState(() {
                     _loadGoals();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text('Your Goal is set now Get ready')));
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) => Fitness_Tracker(),));
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Your Goal is set now Get ready')));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Fitness_Tracker(),
+                        ));
                   });
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Please Set Both Goals')));
                 }
-
-                else{
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please Set Both Goals')));
-                }
-
-                },
+              },
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 14),
                 child: Center(
-                  child: Text("Save Goals", style: TextStyle(fontSize: 18,color: Colors.black)),
+                  child: Text("Save Goals",
+                      style: TextStyle(fontSize: 18, color: Colors.black)),
                 ),
               ),
             ),
@@ -829,11 +1068,15 @@ class _Workout_ScreenState extends State<Workout_Screen> {
     );
   }
 
-  Widget buildGoalCard(String title, String imagePath, TextEditingController controller,) {
+  Widget buildGoalCard(
+    String title,
+    String imagePath,
+    TextEditingController controller,
+  ) {
     return Container(
-        width: 200,
-        height: 200,
-        decoration: BoxDecoration(
+      width: 200,
+      height: 200,
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)],
@@ -842,9 +1085,13 @@ class _Workout_ScreenState extends State<Workout_Screen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(imagePath,height: 200,),
+          Image.asset(
+            imagePath,
+            height: 200,
+          ),
           SizedBox(height: 10),
-          Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(title,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           SizedBox(height: 8),
           TextField(
             controller: controller,
@@ -855,7 +1102,8 @@ class _Workout_ScreenState extends State<Workout_Screen> {
               labelText: 'set goal',
               filled: true,
               fillColor: Colors.grey[200],
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             ),
           ),
         ],
@@ -881,7 +1129,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfileData() async {
-    final List<Map<String, dynamic>> data = await DatabaseHelper.instance.getProfile();
+    final List<Map<String, dynamic>> data =
+        await DatabaseHelper.instance.getProfile();
 
     if (mounted) {
       setState(() {
@@ -896,10 +1145,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[200],
       body: isLoading
-          ? Center(child: CircularProgressIndicator()) // Show loader while fetching data
+          ? Center(
+              child:
+                  CircularProgressIndicator()) // Show loader while fetching data
           : profileData.isEmpty
-          ? _buildNoProfileUI() // Handle empty profile case
-          : _buildProfileUI(), // Show profile if data exists
+              ? _buildNoProfileUI() // Handle empty profile case
+              : _buildProfileUI(), // Show profile if data exists
     );
   }
 
@@ -912,19 +1163,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: 15),
           Text(
             "No Profile Found",
-            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54),
+            style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black54),
           ),
           SizedBox(height: 10),
           ElevatedButton(
-            onPressed: (){
+            onPressed: () {
               _editProfile();
-            },// Opens edit screen to add profile
+            }, // Opens edit screen to add profile
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.purple,
               padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
             ),
-            child: Text("Create Profile", style: GoogleFonts.poppins(fontSize: 16, color: Colors.white)),
+            child: Text("Create Profile",
+                style: GoogleFonts.poppins(fontSize: 16, color: Colors.white)),
           ),
         ],
       ),
@@ -932,7 +1188,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileUI() {
-    Map<String, dynamic> userProfile = profileData.first; // Load first profile entry
+    Map<String, dynamic> userProfile =
+        profileData.first; // Load first profile entry
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -967,7 +1224,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SizedBox(height: 10),
               Text(
                 userProfile['Name'] ?? "N/A",
-                style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
               SizedBox(height: 5),
               Text(
@@ -976,26 +1236,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               SizedBox(height: 10),
               ElevatedButton.icon(
-                onPressed:(){
+                onPressed: () {
                   setState(() {
                     _editProfile();
-                  });},
-                icon: Icon(FontAwesomeIcons.edit, size: 16, color: Colors.white),
-                label: Text("Edit Profile", style: GoogleFonts.poppins(fontSize: 16, color: Colors.white)),
+                  });
+                },
+                icon:
+                    Icon(FontAwesomeIcons.edit, size: 16, color: Colors.white),
+                label: Text("Edit Profile",
+                    style:
+                        GoogleFonts.poppins(fontSize: 16, color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white24,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
               ),
             ],
           ),
         ),
         SizedBox(height: 20),
-        _buildInfoCard(FontAwesomeIcons.user, "Gender", "${userProfile['Gender']}"),
-        _buildInfoCard(FontAwesomeIcons.user, "Age", "${userProfile['Age']} years"),
-        _buildInfoCard(FontAwesomeIcons.rulerVertical, "Height", "${userProfile['Height']} cm"),
-        _buildInfoCard(FontAwesomeIcons.weight, "Weight", "${userProfile['Weight']} kg"),
-
+        _buildInfoCard(
+            FontAwesomeIcons.user, "Gender", "${userProfile['Gender']}"),
+        _buildInfoCard(
+            FontAwesomeIcons.user, "Age", "${userProfile['Age']} years"),
+        _buildInfoCard(FontAwesomeIcons.rulerVertical, "Height",
+            "${userProfile['Height']} cm"),
+        _buildInfoCard(
+            FontAwesomeIcons.weight, "Weight", "${userProfile['Weight']} kg"),
       ],
     );
   }
@@ -1021,12 +1289,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(width: 15),
           Text(
             label,
-            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.black87),
+            style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87),
           ),
           Spacer(),
           Text(
             value,
-            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+            style: GoogleFonts.poppins(
+                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
           ),
         ],
       ),
@@ -1037,14 +1309,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // If no profile exists, set default empty values
     Map<String, dynamic> currentProfile = profileData.isNotEmpty
         ? profileData.first
-        : {"Name":"" ,"Age": 0, "Height": 0, "Weight": 0, "Gender":"Gender", "bio":'Bio'};
+        : {
+            "Name": "",
+            "Age": 0,
+            "Height": 0,
+            "Weight": 0,
+            "Gender": "Gender",
+            "bio": 'Bio'
+          };
 
-    TextEditingController nameController = TextEditingController(text: currentProfile['Name']);
-    TextEditingController ageController = TextEditingController(text: currentProfile['Age'].toString());
-    TextEditingController heightController = TextEditingController(text: currentProfile['Height'].toString());
-    TextEditingController weightController = TextEditingController(text: currentProfile['Weight'].toString());
-    TextEditingController genderController = TextEditingController(text: currentProfile['Gender']);
-    TextEditingController bioController = TextEditingController(text: currentProfile['bio']);
+    TextEditingController nameController =
+        TextEditingController(text: currentProfile['Name']);
+    TextEditingController ageController =
+        TextEditingController(text: currentProfile['Age'].toString());
+    TextEditingController heightController =
+        TextEditingController(text: currentProfile['Height'].toString());
+    TextEditingController weightController =
+        TextEditingController(text: currentProfile['Weight'].toString());
+    TextEditingController genderController =
+        TextEditingController(text: currentProfile['Gender']);
+    TextEditingController bioController =
+        TextEditingController(text: currentProfile['bio']);
 
     showModalBottomSheet(
       context: context,
@@ -1065,7 +1350,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text(
                 profileData.isEmpty ? "Add Profile" : "Edit Profile",
-                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
+                style: GoogleFonts.poppins(
+                    fontSize: 20, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 15),
               _buildTextField("Name", nameController),
@@ -1077,29 +1363,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
-                  if(profileData.isNotEmpty){
-                  await _addProfile(
-                    int.parse(ageController.text),
-                    int.parse(heightController.text),
-                    int.parse(weightController.text),
-                    genderController.text,
-                    nameController.text,
-                    bioController.text
-                  );}
-                  else{
+                  if (profileData.isNotEmpty) {
                     await _updateProfile(
                         int.parse(ageController.text),
                         int.parse(heightController.text),
                         int.parse(weightController.text),
                         genderController.text,
                         nameController.text,
-                        bioController.text
-                    );
+                        bioController.text);
+                  } else {
+                    await _addProfile(
+                        int.parse(ageController.text),
+                        int.parse(heightController.text),
+                        int.parse(weightController.text),
+                        genderController.text,
+                        nameController.text,
+                        bioController.text);
                   }
                   await _loadProfileData(); // Refresh UI
                   Navigator.pop(context); // Close bottom sheet
                 },
-                child: Text(profileData.isEmpty ? "Create Profile" : "Save Changes",
+                child: Text(
+                    profileData.isEmpty ? "Create Profile" : "Save Changes",
                     style: GoogleFonts.poppins(fontSize: 16)),
               ),
             ],
@@ -1109,9 +1394,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-
 // Helper Function to Create TextFields
-  Widget _buildTextField(String label, TextEditingController controller, {bool isNumber = false}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {bool isNumber = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextField(
@@ -1128,18 +1413,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
 // Updates Existing Profile Instead of Adding a New One
-  Future<void> _updateProfile(int age, int height, int weight, String gender, String name,Bio) async {
+  Future<void> _updateProfile(
+      int age, int height, int weight, String gender, String name, Bio) async {
     if (profileData.isNotEmpty) {
-      await DatabaseHelper.instance.updateProfile(name, age, height, weight, gender,Bio);
+      await DatabaseHelper.instance
+          .updateProfile(name, age, height, weight, gender, Bio);
     } else {
-      await DatabaseHelper.instance.addProfile(name, age, height, weight, gender,Bio);
+      await DatabaseHelper.instance
+          .addProfile(name, age, height, weight, gender, Bio);
     }
     await _loadProfileData();
   }
 
-
-  Future<void> _addProfile(int age, int height, int weight, String gender, String name,String Bio) async {
-    await DatabaseHelper.instance.addProfile(name, age, height, weight, gender,Bio);
+  Future<void> _addProfile(int age, int height, int weight, String gender,
+      String name, String Bio) async {
+    await DatabaseHelper.instance
+        .addProfile(name, age, height, weight, gender, Bio);
     await _loadProfileData();
   }
 }
