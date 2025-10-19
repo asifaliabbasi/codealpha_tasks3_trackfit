@@ -175,8 +175,8 @@ class _WaterTrackerState extends State<WaterTracker>
             ),
             SizedBox(height: 20),
             Wrap(
-              spacing: 15,
-              runSpacing: 15,
+              spacing: 20, // Fitts' Law: Increased spacing between targets
+              runSpacing: 20, // Fitts' Law: Increased vertical spacing
               alignment: WrapAlignment.center,
               children: [
                 _buildWaterButton(100, Icons.local_drink),
@@ -230,7 +230,9 @@ class _WaterTrackerState extends State<WaterTracker>
     return InkWell(
       onTap: () => _addWater(amount),
       child: Container(
-        width: 150,
+        // Fitts' Law: Larger touch target for better accessibility
+        width: 160,
+        height: 120, // Fixed height for consistent touch targets
         padding: EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -244,9 +246,10 @@ class _WaterTrackerState extends State<WaterTracker>
           ],
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: Colors.blue),
-            SizedBox(height: 10),
+            Icon(icon, size: 44, color: Colors.blue), // Larger icon
+            SizedBox(height: 12), // Increased spacing
             Text(
               '+$amount ml',
               style: GoogleFonts.poppins(
@@ -254,6 +257,7 @@ class _WaterTrackerState extends State<WaterTracker>
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -318,4 +322,3 @@ class _WaterTrackerState extends State<WaterTracker>
     );
   }
 }
-

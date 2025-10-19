@@ -144,22 +144,26 @@ class _BMICalculatorState extends State<BMICalculator>
               Colors.orange,
             ),
             SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: _calculateBMI,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+            // Fitts' Law: Larger button with adequate touch target
+            Container(
+              width: double.infinity,
+              height: 56, // Minimum 44dp height + padding
+              child: ElevatedButton(
+                onPressed: _calculateBMI,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 5,
                 ),
-                elevation: 5,
-              ),
-              child: Text(
-                'Calculate BMI',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                child: Text(
+                  'Calculate BMI',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -245,23 +249,37 @@ class _BMICalculatorState extends State<BMICalculator>
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(12),
+            padding:
+                EdgeInsets.all(16), // Increased padding for larger touch target
             decoration: BoxDecoration(
               color: color.withOpacity(0.2),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(icon, color: color, size: 28), // Larger icon
           ),
           SizedBox(width: 20),
           Expanded(
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              style: GoogleFonts.poppins(fontSize: 16),
-              decoration: InputDecoration(
-                labelText: label,
-                border: InputBorder.none,
-                labelStyle: GoogleFonts.poppins(color: Colors.black54),
+            child: Container(
+              height: 56, // Fitts' Law: Minimum touch target height
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                style: GoogleFonts.poppins(fontSize: 18), // Larger text
+                decoration: InputDecoration(
+                  labelText: label,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  labelStyle: GoogleFonts.poppins(
+                    color: Colors.black54,
+                    fontSize: 16,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16, // Adequate padding for touch
+                  ),
+                ),
               ),
             ),
           ),
@@ -307,4 +325,3 @@ class _BMICalculatorState extends State<BMICalculator>
     );
   }
 }
-
