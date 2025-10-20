@@ -1,17 +1,20 @@
+import 'package:fitness_tracker_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:fitness_tracker_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fitness_tracker_app/core/theme/app_colors.dart';
 import 'package:fitness_tracker_app/features/fitness/presentation/screens/main_navigation.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -52,10 +55,19 @@ class _SplashScreenState extends State<SplashScreen>
   void _navigateToHome() {
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
+        final authState = ref.read(authProvider);
+
+        Widget destination;
+        if (authState.isLoggedIn) {
+          destination = const MainNavigation();
+        } else {
+          destination = const LoginScreen();
+        }
+
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                const MainNavigation(),
+                destination,
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               return FadeTransition(
@@ -81,11 +93,7 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: AppColors.primaryGradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: AppColors.primaryGradient,
         ),
         child: SafeArea(
           child: Center(
@@ -117,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen>
                           child: const Icon(
                             FontAwesomeIcons.dumbbell,
                             size: 60,
-                            color: AppColors.primary,
+                            color: AppColors.primaryPurple,
                           ),
                         ),
                       ),

@@ -37,7 +37,7 @@ class RecentWorkouts extends StatelessWidget {
                 child: Text(
                   'View All',
                   style: GoogleFonts.poppins(
-                    color: AppColors.primary,
+                    color: AppColors.primaryPurple,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -119,12 +119,12 @@ class RecentWorkouts extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primaryPurple.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               FontAwesomeIcons.dumbbell,
-              color: AppColors.primary,
+              color: AppColors.primaryPurple,
               size: 20,
             ),
           ),

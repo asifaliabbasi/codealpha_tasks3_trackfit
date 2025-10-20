@@ -18,14 +18,14 @@ class StreakWidget extends StatelessWidget {
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: AppColors.primaryGradient,
+          colors: AppColors.primaryGradient.colors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(AppConstants.largeBorderRadius),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primaryPurple.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),

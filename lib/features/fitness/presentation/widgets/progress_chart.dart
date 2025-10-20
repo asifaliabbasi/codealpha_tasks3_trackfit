@@ -108,7 +108,7 @@ class ProgressChart extends StatelessWidget {
                         .map((e) => FlSpot(e.key.toDouble(), e.value.toDouble()))
                         .toList(),
                     isCurved: true,
-                    color: AppColors.primary,
+                    color: AppColors.primaryPurple,
                     barWidth: 3,
                     isStrokeCapRound: true,
                     dotData: FlDotData(
@@ -116,7 +116,7 @@ class ProgressChart extends StatelessWidget {
                       getDotPainter: (spot, percent, barData, index) {
                         return FlDotCirclePainter(
                           radius: 4,
-                          color: AppColors.primary,
+                          color: AppColors.primaryPurple,
                           strokeWidth: 2,
                           strokeColor: Colors.white,
                         );
@@ -124,7 +124,7 @@ class ProgressChart extends StatelessWidget {
                     ),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primaryPurple.withOpacity(0.1),
                     ),
                   ),
                 ],
